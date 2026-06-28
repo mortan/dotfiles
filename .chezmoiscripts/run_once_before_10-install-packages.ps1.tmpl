@@ -1,0 +1,66 @@
+{{- if eq .chezmoi.os "windows" }}
+#Requires -Version 5.1
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$Packages = @(
+    # Terminal und Shell
+    'Microsoft.PowerShell'
+    'Microsoft.WindowsTerminal'
+    'Starship.Starship'
+
+    # CLI-Werkzeuge
+    'Git.Git'
+    'Neovim.Neovim'
+    'sxyazi.yazi'
+    'BurntSushi.ripgrep.MSVC'
+    'sharkdp.fd'
+    'junegunn.fzf'
+    'ajeetdsouza.zoxide'
+    'jqlang.jq'
+
+    # Yazi-Vorschauen
+    #'Gyan.FFmpeg'
+    #'7zip.7zip'
+    #'oschwartz10612.Poppler'
+    #'ImageMagick.ImageMagick'
+)
+
+$InstalledPackages = @(
+    winget list `
+        --accept-source-agreements `
+        --disable-interactivity |
+        Out-String
+)
+
+foreach ($Package in $Packages) {
+    Write-Host "`nPrüfe $Package ..."
+
+    & winget list `
+        --id $Package `
+        --exact `
+        --accept-source-agreements `
+        --disable-interactivity |
+        Out-Null
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "$Package ist bereits installiert."
+        continue
+    }
+
+    Write-Host "Installiere $Package ..."
+
+    & winget install `
+        --id $Package `
+        --exact `
+        --silent `
+        --accept-package-agreements `
+        --accept-source-agreements `
+        --disable-interactivity
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Installation fehlgeschlagen: $Package"
+    }
+}
+{{- end }}

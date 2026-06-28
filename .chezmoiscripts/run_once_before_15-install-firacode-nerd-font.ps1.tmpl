@@ -1,0 +1,170 @@
+{{- if eq .chezmoi.os "windows" }}
+#Requires -Version 5.1
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$Version = '3.4.0'
+$ArchiveUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v$Version/FiraCode.zip"
+
+$TempDirectory = Join-Path $env:TEMP "nerd-fonts-firacode-$Version"
+$ArchivePath = Join-Path $TempDirectory 'FiraCode.zip'
+$ExtractPath = Join-Path $TempDirectory 'extracted'
+
+$UserFontDirectory = Join-Path `
+    $env:LOCALAPPDATA `
+    'Microsoft\Windows\Fonts'
+
+$FontRegistryPath = `
+    'HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts'
+
+$RequiredFontFiles = @(
+    'FiraCodeNerdFontMono-Regular.ttf'
+    'FiraCodeNerdFontMono-Bold.ttf'
+)
+
+function Get-RegistryFontName {
+    param(
+        [Parameter(Mandatory)]
+        [System.IO.FileInfo] $FontFile
+    )
+
+    switch ($FontFile.Name) {
+        'FiraCodeNerdFontMono-Regular.ttf' {
+            return 'FiraCode Nerd Font Mono Regular (TrueType)'
+        }
+
+        'FiraCodeNerdFontMono-Bold.ttf' {
+            return 'FiraCode Nerd Font Mono Bold (TrueType)'
+        }
+
+        default {
+            return "$($FontFile.BaseName) (TrueType)"
+        }
+    }
+}
+
+function Install-UserFont {
+    param(
+        [Parameter(Mandatory)]
+        [System.IO.FileInfo] $FontFile
+    )
+
+    $Destination = Join-Path `
+        $UserFontDirectory `
+        $FontFile.Name
+
+    $RegistryName = Get-RegistryFontName -FontFile $FontFile
+
+    if (Test-Path -LiteralPath $Destination) {
+        $SourceHash = (
+            Get-FileHash `
+                -LiteralPath $FontFile.FullName `
+                -Algorithm SHA256
+        ).Hash
+
+        $DestinationHash = (
+            Get-FileHash `
+                -LiteralPath $Destination `
+                -Algorithm SHA256
+        ).Hash
+
+        if ($SourceHash -eq $DestinationHash) {
+            Write-Host "Bereits installiert: $($FontFile.Name)"
+        }
+        else {
+            Write-Warning @"
+Eine andere Version dieser Schrift ist bereits installiert:
+
+$Destination
+
+Die Datei wird möglicherweise gerade von Windows Terminal verwendet.
+Schließe Windows Terminal vollständig und führe anschließend
+'chezmoi apply -v' erneut aus.
+"@
+
+            return
+        }
+    }
+    else {
+        Copy-Item `
+            -LiteralPath $FontFile.FullName `
+            -Destination $Destination
+
+        Write-Host "Installiert: $($FontFile.Name)"
+    }
+
+    New-ItemProperty `
+        -Path $FontRegistryPath `
+        -Name $RegistryName `
+        -Value $Destination `
+        -PropertyType String `
+        -Force |
+        Out-Null
+}
+
+New-Item `
+    -ItemType Directory `
+    -Path $TempDirectory `
+    -Force |
+    Out-Null
+
+New-Item `
+    -ItemType Directory `
+    -Path $ExtractPath `
+    -Force |
+    Out-Null
+
+New-Item `
+    -ItemType Directory `
+    -Path $UserFontDirectory `
+    -Force |
+    Out-Null
+
+New-Item `
+    -Path $FontRegistryPath `
+    -Force |
+    Out-Null
+
+try {
+    Write-Host "Lade FiraCode Nerd Font $Version herunter ..."
+
+    Invoke-WebRequest `
+        -Uri $ArchiveUrl `
+        -OutFile $ArchivePath `
+        -UseBasicParsing
+
+    Expand-Archive `
+        -LiteralPath $ArchivePath `
+        -DestinationPath $ExtractPath `
+        -Force
+
+    foreach ($RequiredFontFile in $RequiredFontFiles) {
+        $FontFile = Get-ChildItem `
+            -LiteralPath $ExtractPath `
+            -Recurse `
+            -File |
+            Where-Object {
+                $_.Name -eq $RequiredFontFile
+            } |
+            Select-Object -First 1
+
+        if (-not $FontFile) {
+            throw "Schriftdatei wurde im Archiv nicht gefunden: $RequiredFontFile"
+        }
+
+        Install-UserFont -FontFile $FontFile
+    }
+}
+finally {
+    Remove-Item `
+        -LiteralPath $TempDirectory `
+        -Recurse `
+        -Force `
+        -ErrorAction SilentlyContinue
+}
+
+Write-Host ''
+Write-Host 'FiraCode Nerd Font Mono wurde installiert.'
+Write-Host 'Windows Terminal muss vollständig neu gestartet werden.'
+{{- end }}

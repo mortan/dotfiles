@@ -1,0 +1,109 @@
+# ------------------------------------------------------------
+# Dateimanager
+# ------------------------------------------------------------
+
+[mgr]
+ratio          = [ 1, 3, 4 ]
+sort_by        = "natural"
+sort_sensitive = false
+sort_reverse   = false
+sort_dir_first = true
+linemode       = "size"
+show_hidden    = true
+show_symlink   = true
+scrolloff      = 5
+mouse_events   = [ "click", "scroll", "touch", "move", "drag" ]
+title_format   = "Yazi: {cwd}"
+
+
+# ------------------------------------------------------------
+# Vorschau
+# ------------------------------------------------------------
+
+[preview]
+wrap            = "yes"
+tab_size        = 4
+max_width       = 1200
+max_height      = 1800
+image_delay     = 30
+image_filter    = "triangle"
+image_quality   = 80
+sixel_fraction  = 15
+
+
+# ------------------------------------------------------------
+# Dateioperationen
+# ------------------------------------------------------------
+
+[tasks]
+file_workers    = 10
+process_workers = 10
+image_alloc     = 536870912
+image_bound     = [ 0, 0 ]
+
+
+# ------------------------------------------------------------
+# Öffner
+# ------------------------------------------------------------
+
+[[opener.edit]]
+run   = 'nvim "%*"'
+block = true
+desc  = "Mit Neovim bearbeiten"
+for   = "windows"
+
+[[opener.code]]
+run    = 'code "%*"'
+orphan = true
+desc   = "Mit VS Code öffnen"
+for    = "windows"
+
+[[opener.open]]
+run    = 'cmd.exe /c start "" "%1"'
+orphan = true
+desc   = "Mit Standardanwendung öffnen"
+for    = "windows"
+
+[[opener.explorer]]
+run    = 'explorer.exe /select,"%1"'
+orphan = true
+desc   = "Im Explorer anzeigen"
+for    = "windows"
+
+[[opener.powershell]]
+run    = "pwsh.exe -NoExit -Command \"Set-Location -LiteralPath '%d1'\""
+orphan = true
+desc   = "PowerShell hier öffnen"
+for    = "windows"
+
+[[opener.bulk-rename]]
+run   = 'nvim "%*"'
+block = true
+desc  = "Mehrfach umbenennen"
+for   = "windows"
+
+# ------------------------------------------------------------
+# Zuordnungen
+# ------------------------------------------------------------
+
+[open]
+
+prepend_rules = [
+    # Der Bulk-Rename-Dialog muss blockierend geöffnet werden.
+    { url = "bulk-rename.txt", use = "bulk-rename" },
+
+    # Quellcode und Konfigurationsdateien.
+    { url = "*.{cs,csproj,sln,slnx,props,targets,json,jsonc,toml,yaml,yml,xml,xaml,md,txt,log,ps1,psm1,psd1,cmd,bat,sh,py,js,ts,tsx,jsx,css,scss,html,sql}", use = [ "edit", "code", "open" ] },
+
+    # Archive primär mit Yazi behandeln, aber Windows-Öffner anbieten.
+    { url = "*.{zip,7z,rar,tar,gz,bz2,xz}", use = [ "open", "explorer" ] },
+
+    # Medien und Dokumente.
+    { mime = "image/*", use = [ "open", "explorer" ] },
+    { mime = "video/*", use = [ "open", "explorer" ] },
+    { mime = "audio/*", use = [ "open", "explorer" ] },
+    { mime = "application/pdf", use = [ "open", "explorer" ] },
+
+    # Verzeichnisse.
+    { url = "*/", use = [ "explorer", "powershell" ] },
+]

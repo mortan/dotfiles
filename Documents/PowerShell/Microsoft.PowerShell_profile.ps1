@@ -1,6 +1,9 @@
 Invoke-Expression (&starship init powershell)
 
 Set-Alias vim nvim
+Set-Alias lg lazygit
+
+function gst { & git status $args }
 
 # ------------------------------------------------------------
 # PSReadLine

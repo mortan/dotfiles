@@ -1,0 +1,41 @@
+{{- if eq .chezmoi.os "windows" }}
+# Yazi package.toml:
+{{ include "AppData/Roaming/yazi/config/package.toml" | comment "# " }}
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$YaziConfigDirectory = Join-Path $env:APPDATA 'yazi\config'
+$PackageFile = Join-Path $YaziConfigDirectory 'package.toml'
+
+if (-not (Get-Command ya -ErrorAction SilentlyContinue)) {
+    throw @'
+Der Befehl "ya" wurde nicht gefunden.
+
+Installiere Yazi zuerst, beispielsweise mit:
+winget install --id sxyazi.yazi --exact
+'@
+}
+
+if (-not (Test-Path -LiteralPath $PackageFile)) {
+    Write-Host "Keine package.toml gefunden: $PackageFile"
+    exit 0
+}
+
+Write-Host 'Installiere Yazi-Pakete aus package.toml ...'
+
+Push-Location $YaziConfigDirectory
+
+try {
+    & ya pkg install
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "ya pkg install ist mit Exitcode $LASTEXITCODE fehlgeschlagen."
+    }
+
+    Write-Host 'Yazi-Pakete wurden erfolgreich installiert.'
+}
+finally {
+    Pop-Location
+}
+{{- end }}

@@ -1,6 +1,6 @@
 {{- if eq .chezmoi.os "windows" }}
 # Yazi package.toml:
-{{ include "AppData/Roaming/yazi/config/package.toml" | comment "# " }}
+{{ include "dot_config/yazi/package.toml" | comment "# " }}
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest

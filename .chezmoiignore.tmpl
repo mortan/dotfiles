@@ -1,0 +1,15 @@
+README.md
+.DS_Store
+**/.DS_Store
+
+{{ if ne .chezmoi.os "windows" -}}
+AppData
+AppData/**
+Documents
+Documents/PowerShell/**
+.chezmoiscripts/**
+{{ end -}}
+
+{{ if eq .chezmoi.os "windows" -}}
+dot_zshrc
+{{ end -}}

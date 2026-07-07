@@ -1,6 +1,6 @@
 # Dotfiles
 
-Meine Windows-Konfigurationen, verwaltet mit [chezmoi](https://www.chezmoi.io/).
+Meine Windows-, Linux- und macOS-Konfigurationen, verwaltet mit [chezmoi](https://www.chezmoi.io/).
 
 ## Voraussetzungen
 
@@ -11,15 +11,41 @@ Auf einer frischen Windows-Installation wird benötigt:
 * WinGet
 * Git
 * chezmoi
+* Windows Developer Mode oder Administratorrechte für Symlinks
 
 WinGet ist normalerweise über den Microsoft App Installer vorhanden.
+
+Auf Linux und macOS wird benötigt:
+
+* Git
+* chezmoi
+* zsh
+* Neovim
+* Yazi
+* Starship
+
+Die Linux- und macOS-Dateien stammen aus dem vorherigen GNU-Stow-Setup.
 
 ## Quick Start
 
 ### 1. chezmoi installieren
 
+Windows:
+
 ```powershell
 winget install --id twpayne.chezmoi --exact
+```
+
+macOS mit Homebrew:
+
+```sh
+brew install chezmoi
+```
+
+Linux:
+
+```sh
+sh -c "$(curl -fsLS get.chezmoi.io)"
 ```
 
 ### 2. Repository initialisieren
@@ -60,27 +86,60 @@ Alternativ direkt beim Initialisieren:
 chezmoi init --apply https://gogs.fluxkompensator.dedyn.io/fabian/dotfiles-new.git
 ```
 
-Nach dem ersten Apply Windows Terminal vollständig schließen und neu starten.
+Nach dem ersten Apply Windows Terminal oder die Shell vollständig schließen und neu starten.
 
 ## Verwaltete Konfigurationen
 
-Typische Zielpfade:
+Chezmoi wählt die passenden Dateien über `.chezmoiignore.tmpl` nach Betriebssystem aus.
+
+Typische Windows-Zielpfade:
 
 ```text
 PowerShell:
 Documents\PowerShell\Microsoft.PowerShell_profile.ps1
 
-Starship:
-.config\starship.toml
-
 Windows Terminal:
 AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json
 
-Yazi:
-AppData\Roaming\yazi\config
-
 Neovim:
 AppData\Local\nvim
+
+Yazi:
+AppData\Roaming\yazi\config
+```
+
+Typische Linux- und macOS-Zielpfade:
+
+```text
+Zsh:
+~/.zshrc
+
+Neovim:
+~/.config/nvim
+
+Yazi:
+~/.config/yazi
+```
+
+Die Yazi-Konfiguration ist auf allen Betriebssystemen inhaltlich gleich. Die
+kanonischen Dateien liegen unter `dot_config/yazi`. Unter Linux/macOS werden
+sie direkt von chezmoi verwaltet. Unter Windows zeigt `%APPDATA%\yazi\config`
+per chezmoi-Symlink auf dieselbe `~/.config/yazi` Konfiguration.
+
+```text
+dot_config/yazi
+AppData/Roaming/yazi/config
+```
+
+Die Neovim-Konfiguration ist ebenfalls auf allen Betriebssystemen inhaltlich
+gleich. Die kanonischen Dateien liegen unter `dot_config/nvim`. Unter
+Linux/macOS werden sie direkt von chezmoi verwaltet. Unter Windows zeigt
+`%LOCALAPPDATA%\nvim` per chezmoi-Symlink auf dieselbe `~/.config/nvim`
+Konfiguration.
+
+```text
+dot_config/nvim
+AppData/Local/nvim
 ```
 
 Alle verwalteten Dateien anzeigen:
@@ -319,12 +378,18 @@ git commit -m "Update Windows Terminal configuration"
 git push
 ```
 
+### Neovim-Konfiguration ändern
+
+Die Neovim-Dateien werden nur unter `dot_config/nvim` gepflegt. Unter
+Linux/macOS landen sie direkt in `~/.config/nvim`. Unter Windows legt chezmoi
+`%LOCALAPPDATA%\nvim` als Symlink auf `~/.config/nvim` an.
+
 ## Yazi-Pakete
 
 Yazi-Pakete und Themes werden in folgender Datei verwaltet:
 
 ```text
-AppData\Roaming\yazi\config\package.toml
+dot_config\yazi\package.toml
 ```
 
 Paket hinzufügen:
@@ -342,7 +407,13 @@ ya pkg add yazi-rs/flavors:catppuccin-mocha
 Anschließend die Änderung übernehmen:
 
 ```powershell
-chezmoi re-add "$env:APPDATA\yazi\config\package.toml"
+chezmoi re-add "$HOME\.config\yazi\package.toml"
+```
+
+Unter Linux und macOS:
+
+```sh
+chezmoi re-add ~/.config/yazi/package.toml
 ```
 
 Pakete aus `package.toml` installieren:
@@ -450,8 +521,8 @@ chezmoi verify
 
 ## Hinweise
 
-* `%LOCALAPPDATA%\nvim-data` wird nicht verwaltet. Dort liegen Plugins, Treesitter-Parser, Mason-Pakete und andere generierte Daten.
-* Für Yazi wird nur `%APPDATA%\yazi\config` verwaltet.
+* `%LOCALAPPDATA%\nvim-data` unter Windows und `~/.local/share/nvim` unter Linux/macOS werden nicht verwaltet. Dort liegen Plugins, Treesitter-Parser, Mason-Pakete und andere generierte Daten.
+* Für Yazi wird `~/.config/yazi` verwaltet. Unter Windows zeigt `%APPDATA%\yazi\config` per Symlink darauf.
 * Windows Terminal muss nach einer Font-Installation vollständig neu gestartet werden.
 * Secrets, API-Schlüssel und Passwörter dürfen nicht unverschlüsselt committed werden.
 * Vor jedem größeren Apply empfiehlt sich:
@@ -459,4 +530,3 @@ chezmoi verify
 ```powershell
 chezmoi -n -v apply
 ```
-

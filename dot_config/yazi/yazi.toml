@@ -52,11 +52,23 @@ block = true
 desc  = "Mit Neovim bearbeiten"
 for   = "windows"
 
+[[opener.edit]]
+run   = 'nvim "$@"'
+block = true
+desc  = "Mit Neovim bearbeiten"
+for   = "unix"
+
 [[opener.code]]
 run    = 'code "%*"'
 orphan = true
 desc   = "Mit VS Code öffnen"
 for    = "windows"
+
+[[opener.code]]
+run    = 'code "$@"'
+orphan = true
+desc   = "Mit VS Code öffnen"
+for    = "unix"
 
 [[opener.open]]
 run    = 'cmd.exe /c start "" "%1"'
@@ -64,11 +76,23 @@ orphan = true
 desc   = "Mit Standardanwendung öffnen"
 for    = "windows"
 
+[[opener.open]]
+run    = 'if command -v xdg-open >/dev/null 2>&1; then xdg-open "$1"; else open "$1"; fi'
+orphan = true
+desc   = "Mit Standardanwendung öffnen"
+for    = "unix"
+
 [[opener.explorer]]
 run    = 'explorer.exe /select,"%1"'
 orphan = true
 desc   = "Im Explorer anzeigen"
 for    = "windows"
+
+[[opener.explorer]]
+run    = 'if command -v xdg-open >/dev/null 2>&1; then xdg-open "$(dirname "$1")"; else open -R "$1"; fi'
+orphan = true
+desc   = "Im Dateimanager anzeigen"
+for    = "unix"
 
 [[opener.powershell]]
 run    = "pwsh.exe -NoExit -Command \"Set-Location -LiteralPath '%d1'\""
@@ -76,11 +100,23 @@ orphan = true
 desc   = "PowerShell hier öffnen"
 for    = "windows"
 
+[[opener.powershell]]
+run    = 'cd "$1" && exec "$SHELL"'
+block  = true
+desc   = "Shell hier öffnen"
+for    = "unix"
+
 [[opener.bulk-rename]]
 run   = 'nvim "%*"'
 block = true
 desc  = "Mehrfach umbenennen"
 for   = "windows"
+
+[[opener.bulk-rename]]
+run   = 'nvim "$@"'
+block = true
+desc  = "Mehrfach umbenennen"
+for   = "unix"
 
 # ------------------------------------------------------------
 # Zuordnungen
@@ -95,7 +131,7 @@ prepend_rules = [
     # Quellcode und Konfigurationsdateien.
     { url = "*.{cs,csproj,sln,slnx,props,targets,json,jsonc,toml,yaml,yml,xml,xaml,md,txt,log,ps1,psm1,psd1,cmd,bat,sh,py,js,ts,tsx,jsx,css,scss,html,sql}", use = [ "edit", "code", "open" ] },
 
-    # Archive primär mit Yazi behandeln, aber Windows-Öffner anbieten.
+    # Archive primär mit Yazi behandeln, aber System-Öffner anbieten.
     { url = "*.{zip,7z,rar,tar,gz,bz2,xz}", use = [ "open", "explorer" ] },
 
     # Medien und Dokumente.

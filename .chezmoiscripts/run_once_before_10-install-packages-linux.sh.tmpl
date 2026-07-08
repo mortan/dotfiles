@@ -1,0 +1,61 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/bin/sh
+set -eu
+
+if ! command -v pacman >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+pacman wurde nicht gefunden.
+
+Dieses Bootstrap-Skript ist fuer Arch Linux oder pacman-basierte Systeme gedacht.
+EOF
+    exit 1
+fi
+
+packages="
+git
+chezmoi
+zsh
+neovim
+yazi
+ripgrep
+fd
+fzf
+zoxide
+jq
+eza
+starship
+ffmpeg
+p7zip
+poppler
+imagemagick
+file
+unzip
+"
+
+missing_packages=""
+
+for package in $packages; do
+    echo "Pruefe $package ..."
+
+    if pacman -Qi "$package" >/dev/null 2>&1; then
+        echo "$package ist bereits installiert."
+        continue
+    fi
+
+    missing_packages="$missing_packages $package"
+done
+
+if [ -z "$missing_packages" ]; then
+    echo "Alle pacman-Pakete sind bereits installiert."
+    exit 0
+fi
+
+echo
+echo "Installiere pacman-Pakete:$missing_packages"
+
+if command -v sudo >/dev/null 2>&1; then
+    sudo pacman -S --needed --noconfirm $missing_packages
+else
+    pacman -S --needed --noconfirm $missing_packages
+fi
+{{- end }}

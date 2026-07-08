@@ -19,10 +19,8 @@ Auf Linux und macOS wird benötigt:
 
 * Git
 * chezmoi
-* zsh
-* Neovim
-* Yazi
-* Starship
+* macOS: Homebrew
+* Linux: pacman
 
 Die Linux- und macOS-Dateien stammen aus dem vorherigen GNU-Stow-Setup.
 
@@ -39,13 +37,13 @@ winget install --id twpayne.chezmoi --exact
 macOS mit Homebrew:
 
 ```sh
-brew install chezmoi
+brew install git chezmoi
 ```
 
-Linux:
+Linux mit pacman:
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)"
+sudo pacman -S --needed git chezmoi
 ```
 
 ### 2. Repository initialisieren
@@ -119,6 +117,9 @@ Neovim:
 
 Yazi:
 ~/.config/yazi
+
+iTerm2:
+~/Library/Preferences/com.googlecode.iterm2.plist
 ```
 
 Die Yazi-Konfiguration ist auf allen Betriebssystemen inhaltlich gleich. Die
@@ -142,6 +143,10 @@ dot_config/nvim
 AppData/Local/nvim
 ```
 
+Die iTerm2-Konfiguration wird nur unter macOS verwaltet. Vor einem Apply ist es
+am sichersten, iTerm2 zu schließen, damit macOS die Preferences nicht direkt
+wieder überschreibt.
+
 Alle verwalteten Dateien anzeigen:
 
 ```powershell
@@ -161,9 +166,20 @@ Beispiele:
 ```text
 .chezmoiscripts/
 ├── run_once_before_10-install-packages.ps1.tmpl
+├── run_once_before_10-install-packages-darwin.sh.tmpl
+├── run_once_before_10-install-packages-linux.sh.tmpl
+├── run_once_before_12-install-oh-my-zsh.sh.tmpl
 ├── run_once_before_15-install-firacode-nerd-font.ps1.tmpl
-└── run_onchange_after_20-install-yazi-packages.ps1.tmpl
+├── run_once_before_15-install-firacode-nerd-font-darwin.sh.tmpl
+├── run_once_before_15-install-firacode-nerd-font-linux.sh.tmpl
+├── run_onchange_after_20-install-yazi-packages.ps1.tmpl
+└── run_onchange_after_20-install-yazi-packages-unix.sh.tmpl
 ```
+
+Die Paket-Skripte installieren plattformspezifisch die wichtigsten Werkzeuge:
+Shell/Prompt, Neovim, Yazi, ripgrep/fd/fzf/zoxide, jq/eza und Vorschau-Tools
+für Yazi. macOS verwendet Homebrew, Linux verwendet pacman. Nicht passende
+Skripte werden über `.chezmoiignore.tmpl` ausgeblendet.
 
 ### Skripttypen
 

@@ -1,0 +1,29 @@
+{{- if or (eq .chezmoi.os "darwin") (eq .chezmoi.os "linux") -}}
+#!/bin/sh
+# Yazi package.toml:
+{{ include "dot_config/yazi/package.toml" | comment "# " }}
+
+set -eu
+
+yazi_config_dir="$HOME/.config/yazi"
+package_file="$yazi_config_dir/package.toml"
+
+if ! command -v ya >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+Der Befehl "ya" wurde nicht gefunden.
+
+Installiere Yazi zuerst ueber das Paket-Skript oder deinen Paketmanager.
+EOF
+    exit 1
+fi
+
+if [ ! -f "$package_file" ]; then
+    echo "Keine package.toml gefunden: $package_file"
+    exit 0
+fi
+
+echo "Installiere Yazi-Pakete aus package.toml ..."
+
+cd "$yazi_config_dir"
+ya pkg install
+{{- end }}

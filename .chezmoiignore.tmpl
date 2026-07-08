@@ -2,14 +2,40 @@ README.md
 .DS_Store
 **/.DS_Store
 
+{{ if ne .chezmoi.os "darwin" -}}
+Library
+Library/**
+{{ end -}}
+
 {{ if ne .chezmoi.os "windows" -}}
 AppData
 AppData/**
 Documents
 Documents/PowerShell/**
-.chezmoiscripts/**
+{{ end -}}
+
+{{ if eq .chezmoi.os "darwin" -}}
+.chezmoiscripts/10-install-packages-linux.sh
+.chezmoiscripts/10-install-packages.ps1
+.chezmoiscripts/15-install-firacode-nerd-font-linux.sh
+.chezmoiscripts/15-install-firacode-nerd-font.ps1
+.chezmoiscripts/20-install-yazi-packages.ps1
+{{ end -}}
+
+{{ if eq .chezmoi.os "linux" -}}
+.chezmoiscripts/10-install-packages-darwin.sh
+.chezmoiscripts/10-install-packages.ps1
+.chezmoiscripts/15-install-firacode-nerd-font-darwin.sh
+.chezmoiscripts/15-install-firacode-nerd-font.ps1
+.chezmoiscripts/20-install-yazi-packages.ps1
 {{ end -}}
 
 {{ if eq .chezmoi.os "windows" -}}
+.chezmoiscripts/10-install-packages-darwin.sh
+.chezmoiscripts/10-install-packages-linux.sh
+.chezmoiscripts/12-install-oh-my-zsh.sh
+.chezmoiscripts/15-install-firacode-nerd-font-darwin.sh
+.chezmoiscripts/15-install-firacode-nerd-font-linux.sh
+.chezmoiscripts/20-install-yazi-packages-unix.sh
 dot_zshrc
 {{ end -}}

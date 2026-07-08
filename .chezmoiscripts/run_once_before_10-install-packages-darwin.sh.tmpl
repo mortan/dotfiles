@@ -1,0 +1,67 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+set -eu
+
+if ! command -v brew >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+Homebrew wurde nicht gefunden.
+
+Installiere Homebrew zuerst:
+https://brew.sh/
+EOF
+    exit 1
+fi
+
+packages="
+git
+chezmoi
+zsh
+neovim
+yazi
+ripgrep
+fd
+fzf
+zoxide
+jq
+eza
+starship
+ffmpeg
+sevenzip
+poppler
+imagemagick
+"
+
+for package in $packages; do
+    echo
+    echo "Pruefe $package ..."
+
+    if brew list --formula "$package" >/dev/null 2>&1; then
+        echo "$package ist bereits installiert."
+        continue
+    fi
+
+    echo "Installiere $package ..."
+    if ! brew install "$package"; then
+        echo "Warnung: Installation fehlgeschlagen: $package" >&2
+    fi
+done
+
+casks="
+iterm2
+"
+
+for cask in $casks; do
+    echo
+    echo "Pruefe $cask ..."
+
+    if brew list --cask "$cask" >/dev/null 2>&1; then
+        echo "$cask ist bereits installiert."
+        continue
+    fi
+
+    echo "Installiere $cask ..."
+    if ! brew install --cask "$cask"; then
+        echo "Warnung: Installation fehlgeschlagen: $cask" >&2
+    fi
+done
+{{- end }}

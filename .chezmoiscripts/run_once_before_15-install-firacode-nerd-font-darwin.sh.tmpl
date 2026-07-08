@@ -1,0 +1,19 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+set -eu
+
+if ! command -v brew >/dev/null 2>&1; then
+    echo "Homebrew wurde nicht gefunden. Ueberspringe FiraCode Nerd Font." >&2
+    exit 0
+fi
+
+cask="font-fira-code-nerd-font"
+
+if brew list --cask "$cask" >/dev/null 2>&1; then
+    echo "FiraCode Nerd Font ist bereits installiert."
+    exit 0
+fi
+
+echo "Installiere FiraCode Nerd Font ..."
+brew install --cask "$cask"
+{{- end }}

@@ -1,0 +1,24 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/bin/sh
+set -eu
+
+if ! command -v pacman >/dev/null 2>&1; then
+    echo "pacman wurde nicht gefunden. Ueberspringe FiraCode Nerd Font." >&2
+    exit 0
+fi
+
+package="ttf-firacode-nerd"
+
+if pacman -Qi "$package" >/dev/null 2>&1; then
+    echo "FiraCode Nerd Font ist bereits installiert."
+    exit 0
+fi
+
+echo "Installiere FiraCode Nerd Font ..."
+
+if command -v sudo >/dev/null 2>&1; then
+    sudo pacman -S --needed --noconfirm "$package"
+else
+    pacman -S --needed --noconfirm "$package"
+fi
+{{- end }}

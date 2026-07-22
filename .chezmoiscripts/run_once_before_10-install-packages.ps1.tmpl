@@ -63,4 +63,21 @@ foreach ($Package in $Packages) {
         Write-Warning "Installation fehlgeschlagen: $Package"
     }
 }
+
+$PowerShellModules = @(
+    'PSFzf'
+    'posh-git'
+)
+
+foreach ($Module in $PowerShellModules) {
+    Write-Host "`nPrüfe PowerShell-Modul $Module ..."
+
+    if (Get-Module -ListAvailable -Name $Module) {
+        Write-Host "$Module ist bereits installiert."
+        continue
+    }
+
+    Write-Host "Installiere PowerShell-Modul $Module ..."
+    Install-Module -Name $Module -Scope CurrentUser -Repository PSGallery -Force
+}
 {{- end }}

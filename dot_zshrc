@@ -114,8 +114,11 @@ alias dxp=doublexpmissions
 
 alias ls="eza -l --header --icons --octal-permissions --git"
 alias g="git"
+alias gst="git status"
+alias lg="lazygit"
 alias vim="nvim"
 alias vi="nvim"
+alias oc="opencode"
 
 
 function y() {

@@ -6,6 +6,9 @@ config.default_prog = { "pwsh.exe", "-NoLogo" }
 config.color_scheme = "Catppuccin Mocha"
 config.font = wezterm.font('FiraCode Nerd Font Mono')
 config.font_size = 12
+config.enable_scroll_bar = true
+--config.window_decorations = "RESIZE"
+config.enable_tab_bar = false
 
 config.leader = {
   key = "b",

@@ -10,6 +10,12 @@ else
 	config.font_size = 16
 end
 
+local session_name = os.getenv("SESSIONNAME") or ""
+
+if session_name:match("^RDP") then
+	config.prefer_egl = true
+end
+
 config.color_scheme = "Catppuccin Mocha"
 config.font = wezterm.font("FiraCode Nerd Font Mono")
 config.enable_scroll_bar = true

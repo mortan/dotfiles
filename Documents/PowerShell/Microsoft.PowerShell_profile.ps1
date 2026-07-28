@@ -1,9 +1,32 @@
 Invoke-Expression (&starship init powershell)
 
+# ------------------------------------------------------------
+# Aliase und Funktionen
+# ------------------------------------------------------------
+
+# Bereits vorhandene PowerShell Aliase entfernen, damit dies für CoreUtils und eigene Aliase zur Verfügung stehen
+$aliasesToRemove = @(
+    'cat', 'cp', 'ls', 'mv', 'rm', 'date', 'echo', 'mkdir', 'more', 'pwd', 'rmdir', 'tee', 'uptime'
+    'sort', 'sleep', 'tee', 'grep', 'gl'
+)
+
+foreach ($alias in $aliasesToRemove) {
+    if (Test-Path "Alias:$alias") {
+        Remove-Item "Alias:$alias" -Force
+    }
+}
+
+Set-Alias vi nvim
 Set-Alias vim nvim
 Set-Alias lg lazygit
+Set-Alias gt git-tools
+Set-Alias oc opencode
 
-function gst { & git status $args }
+function gst { git status $args }
+function npp { &"C:\Program Files\Notepad++\notepad++.exe" @args }
+function gl  { git log @args }
+function glo { git log --oneline @args}
+function glg { git log --graph --oneline --simplify-by-decoration @args}
 
 # ------------------------------------------------------------
 # PSReadLine
@@ -110,6 +133,10 @@ Set-PSReadLineKeyHandler -Chord 'Ctrl+Alt+k' -ScriptBlock {
             }
         }
 }
+
+# ------------------------------------------------------------
+# yazi
+# ------------------------------------------------------------
 
 $env:YAZI_FILE_ONE = 'C:\Program Files\Git\usr\bin\file.exe'
 function y {

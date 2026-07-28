@@ -6,7 +6,7 @@ Invoke-Expression (&starship init powershell)
 
 # Bereits vorhandene PowerShell Aliase entfernen, damit dies für CoreUtils und eigene Aliase zur Verfügung stehen
 $aliasesToRemove = @(
-    'cat', 'cp', 'ls', 'mv', 'rm', 'date', 'echo', 'mkdir', 'more', 'pwd', 'rmdir', 'tee', 'uptime'
+    'cat', 'cp', 'ls', 'mv', 'rm', 'date', 'echo', 'mkdir', 'more', 'pwd', 'rmdir', 'tee', 'uptime',
     'sort', 'sleep', 'tee', 'grep', 'gl'
 )
 
@@ -27,6 +27,73 @@ function npp { &"C:\Program Files\Notepad++\notepad++.exe" @args }
 function gl  { git log @args }
 function glo { git log --oneline @args}
 function glg { git log --graph --oneline --simplify-by-decoration @args}
+
+# Verzeichnis auswählen + Tree-Preview
+function zfp {
+    $dir = zoxide query -l |
+        fzf `
+            --preview 'eza --tree --level=2 --icons --all {}' `
+            --preview-window 'right:60%' `
+            --bind 'alt-j:preview-down,alt-k:preview-up'
+
+    if ($dir) {
+        Set-Location -LiteralPath $dir
+    }
+}
+
+# Git-Repositories auswählen
+function zfg {
+    $dir = zoxide query -l |
+        Where-Object { Test-Path (Join-Path $_ '.git') } |
+        fzf `
+            --preview 'eza --tree --level=2 --icons --all {}'
+
+    if ($dir) {
+        Set-Location -LiteralPath $dir
+        git status
+    }
+}
+
+# Repository auswählen + Git-Branches durchsuchen
+function zfb {
+    $dir = zoxide query -l |
+        Where-Object { Test-Path (Join-Path $_ '.git') } |
+        fzf `
+            --preview 'eza --tree --level=2 --icons --all {}'
+
+    if (-not $dir) {
+        return
+    }
+
+    Set-Location -LiteralPath $dir
+
+    $branch = git branch --format='%(refname:short)' |
+        fzf `
+            --preview 'git log --oneline --graph --decorate -20 {}'
+
+    if ($branch) {
+        git switch $branch
+    }
+}
+
+# Repository auswählen + Commits durchsuchen
+function zfc {
+    $dir = zoxide query -l |
+        Where-Object { Test-Path (Join-Path $_ '.git') } |
+        fzf
+
+    if (-not $dir) {
+        return
+    }
+
+    Set-Location -LiteralPath $dir
+
+    git log --oneline --decorate --all |
+        fzf `
+            --ansi `
+            --preview 'git show --stat --oneline {1}' `
+            --preview-window 'right:65%'
+}
 
 # ------------------------------------------------------------
 # PSReadLine
@@ -106,18 +173,6 @@ Set-PSReadLineKeyHandler -Chord 'Ctrl+o' -ScriptBlock {
     }
 }
 
-# Verzeichnis auswählen und direkt hineinwechseln
-Set-PSReadLineKeyHandler -Chord 'Ctrl+g' -ScriptBlock {
-    $directory = Get-ChildItem -Directory -Recurse -ErrorAction SilentlyContinue |
-        ForEach-Object FullName |
-        Invoke-Fzf
-
-    if ($directory) {
-        Set-Location $directory
-        [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
-    }
-}
-
 # Prozess auswählen und beenden
 Set-PSReadLineKeyHandler -Chord 'Ctrl+Alt+k' -ScriptBlock {
     Get-Process |
@@ -140,13 +195,13 @@ Set-PSReadLineKeyHandler -Chord 'Ctrl+Alt+k' -ScriptBlock {
 
 $env:YAZI_FILE_ONE = 'C:\Program Files\Git\usr\bin\file.exe'
 function y {
-	$tmp = (New-TemporaryFile).FullName
-	yazi.exe @args --cwd-file="$tmp"
-	$cwd = Get-Content -Path $tmp -Encoding UTF8
-	if ($cwd -and $cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
-		Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
-	}
-	Remove-Item -Path $tmp
+    $tmp = (New-TemporaryFile).FullName
+    yazi.exe @args --cwd-file="$tmp"
+    $cwd = Get-Content -Path $tmp -Encoding UTF8
+    if ($cwd -and $cwd -ne $PWD.Path -and (Test-Path -LiteralPath $cwd -PathType Container)) {
+        Set-Location -LiteralPath (Resolve-Path -LiteralPath $cwd).Path
+    }
+    Remove-Item -Path $tmp
 }
 
 
@@ -351,3 +406,29 @@ function PSConsoleHostReadLine {
 }
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # DO NOT MODIFY -- coreutils -- 60b36fc6-2d59-49df-be51-28dd2f4c3c9a
+
+
+# ------------------------------------------------------------
+# Eigene Ausnahmen nach dem generierten Coreutils-Block
+# ------------------------------------------------------------
+
+$script:__COREUTILS__.Remove('ls') | Out-Null
+$script:__COREUTILS__.Remove('la') | Out-Null
+
+$script:__COREUTILS_FAST_SKIP__ = [regex]::new(
+    '\b(?:' + ($script:__COREUTILS__ -join '|') + ')\b',
+    [System.Text.RegularExpressions.RegexOptions]::Compiled -bor
+        [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+)
+
+function global:ls {
+    eza --icons=always @args
+}
+
+function global:la {
+    eza --icons=always --all @args
+}
+
+function global:ll {
+    eza --icons=always --long @args
+}

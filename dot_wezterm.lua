@@ -8,15 +8,18 @@ if wezterm.target_triple:find("windows") then
 	config.front_end = "WebGpu"
 	config.webgpu_power_preference = "HighPerformance"
 	config.max_fps = 240
-	if wezterm.gui then
-		for _, gpu in ipairs(wezterm.gui.enumerate_gpus()) do
-			if gpu.backend == "Dx12" and gpu.device_type == "DiscreteGpu" then
-				config.front_end = "WebGpu"
-				config.webgpu_preferred_adapter = gpu
-				break
-			end
-		end
-	end
+	config.animation_fps = 60
+	
+	-- Dx12 priorisieren. Komischerweise schlechtere Performance als Vulkan.
+	--if wezterm.gui then
+	--	for _, gpu in ipairs(wezterm.gui.enumerate_gpus()) do
+	--		if gpu.backend == "Dx12" and gpu.device_type == "DiscreteGpu" then
+	--			config.front_end = "WebGpu"
+	--			config.webgpu_preferred_adapter = gpu
+	--			break
+	--		end
+	--	end
+	--end
 else
 	config.default_prog = { "/bin/zsh", "-l" }
 	config.font_size = 16
@@ -25,6 +28,7 @@ end
 local session_name = os.getenv("SESSIONNAME") or ""
 
 if session_name:match("^RDP") then
+	config.front_end = "OpenGL"
 	config.prefer_egl = true
 end
 

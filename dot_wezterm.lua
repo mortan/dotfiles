@@ -5,6 +5,18 @@ local act = wezterm.action
 if wezterm.target_triple:find("windows") then
 	config.default_prog = { "pwsh.exe", "-NoLogo" }
 	config.font_size = 12
+	config.front_end = "WebGpu"
+	config.webgpu_power_preference = "HighPerformance"
+	config.max_fps = 240
+	if wezterm.gui then
+		for _, gpu in ipairs(wezterm.gui.enumerate_gpus()) do
+			if gpu.backend == "Dx12" and gpu.device_type == "DiscreteGpu" then
+				config.front_end = "WebGpu"
+				config.webgpu_preferred_adapter = gpu
+				break
+			end
+		end
+	end
 else
 	config.default_prog = { "/bin/zsh", "-l" }
 	config.font_size = 16

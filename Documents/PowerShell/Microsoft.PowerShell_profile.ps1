@@ -1,3 +1,8 @@
+$utf8 = [System.Text.UTF8Encoding]::new()
+[Console]::InputEncoding = $utf8
+[Console]::OutputEncoding = $utf8
+$OutputEncoding = $utf8
+
 Invoke-Expression (&starship init powershell)
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
@@ -8,7 +13,7 @@ Invoke-Expression (& { (zoxide init powershell | Out-String) })
 # Bereits vorhandene PowerShell Aliase entfernen, damit dies für CoreUtils und eigene Aliase zur Verfügung stehen
 $aliasesToRemove = @(
     'cat', 'cp', 'ls', 'mv', 'rm', 'date', 'echo', 'mkdir', 'more', 'pwd', 'rmdir', 'tee', 'uptime',
-    'sort', 'sleep', 'tee', 'grep', 'gl'
+    'sort', 'sleep', 'tee', 'grep', 'gl', 'gsn'
 )
 
 foreach ($alias in $aliasesToRemove) {
@@ -26,8 +31,122 @@ Set-Alias oc opencode
 function gst { git status $args }
 function npp { &"C:\Program Files\Notepad++\notepad++.exe" @args }
 function gl  { git log @args }
-function glo { git log --oneline @args}
+#function glo { git log --oneline @args}
 function glg { git log --graph --oneline --simplify-by-decoration @args}
+
+function gsn {
+	param(
+	 [Parameter(Position = 0, ValueFromRemainingArguments)]
+	 [ValidateNotNullOrEmpty()]
+	 [string[]]$Commit = @('HEAD')
+	)
+
+	git --no-pager show --name-status @Commit --
+}
+
+function glo {
+    param(
+        [ValidateRange(1, [int]::MaxValue)]
+        [int]$Count = 20,
+
+        [switch]$All,
+
+        [switch]$NoRelativeDate
+    )
+
+    $authorMaxLength = 15
+
+    $gitArguments = @(
+        '-c'
+        'i18n.logOutputEncoding=utf-8'
+        'log'
+        '--date=short'
+        '--pretty=format:%h%x1f%ad%x1f%cr%x1f%an%x1f%s%x1f%D'
+    )
+
+    if (-not $All) {
+        $gitArguments += "-$Count"
+    }
+
+    $commits = @(
+        git @gitArguments |
+            ForEach-Object {
+                $parts = $_ -split "`u{1F}", 6
+
+                [PSCustomObject]@{
+                    Hash         = $parts[0]
+                    Date         = $parts[1]
+                    RelativeDate = $parts[2]
+                    Author       = if ($parts[3].Length -gt $authorMaxLength) {
+                        $parts[3].Substring(0, $authorMaxLength) + '...'
+                    } else {
+                        $parts[3]
+                    }
+                    Subject      = $parts[4]
+                    Refs         = $parts[5]
+                }
+            }
+    )
+
+    if ($commits.Count -eq 0) {
+        return
+    }
+
+    $relativeDateWidth = (
+        $commits.RelativeDate |
+            ForEach-Object Length |
+            Measure-Object -Maximum
+    ).Maximum
+
+    $authorWidth = (
+        $commits.Author |
+            ForEach-Object Length |
+            Measure-Object -Maximum
+    ).Maximum
+
+    $esc = [char]27
+
+    $yellow  = "$esc[33m"
+    $green   = "$esc[32m"
+    $cyan    = "$esc[36m"
+    $magenta = "$esc[35m"
+    $reset   = "$esc[0m"
+
+    $lines = foreach ($commit in $commits) {
+        $relativeDate = "($($commit.RelativeDate))".PadRight($relativeDateWidth + 2)
+        $author       = $commit.Author.PadRight($authorWidth)
+
+        $line =
+            "${yellow}$($commit.Hash)${reset}" +
+            "  $($commit.Date)"
+
+        if (-not $NoRelativeDate) {
+            $line += " ${green}${relativeDate}${reset}"
+        }
+
+        $line +=
+            "  " +
+            "${cyan}${author}${reset}" +
+            ": $($commit.Subject)"
+
+        if ($commit.Refs) {
+            $line += "  ${magenta}$($commit.Refs)${reset}"
+        }
+
+        $line
+    }
+
+    $lines
+}
+
+function glof {
+    glo -All -NoRelativeDate |
+        fzf `
+            --ansi `
+            --no-sort `
+            --preview 'git --no-pager show --format= --name-status {1} --' `
+            --preview-window 'right:40%'
+}
 
 # Verzeichnis auswählen + Tree-Preview
 function zfp {
@@ -134,6 +253,8 @@ $env:FZF_DEFAULT_OPTS = @(
     '--bind=ctrl-d:deselect-all'
     '--bind=ctrl-u:preview-half-page-up'
     '--bind=ctrl-f:preview-half-page-down'
+    '--bind=alt-g:first'
+    '--bind=alt-G:last'
 ) -join ' '
 
 # Falls ripgrep installiert ist, für die Dateisuche verwenden.

@@ -37,6 +37,7 @@ config.font = wezterm.font("FiraCode Nerd Font Mono")
 config.enable_scroll_bar = true
 --config.window_decorations = "RESIZE"
 config.enable_tab_bar = false
+config.window_close_confirmation = "NeverPrompt"
 
 config.leader = {
 	key = "b",

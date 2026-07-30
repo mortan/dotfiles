@@ -215,6 +215,45 @@ function zfc {
             --preview-window 'right:65%'
 }
 
+function ai {
+    $questionDirectory = Join-Path $HOME '.codex\questions'
+
+    Push-Location $questionDirectory
+
+    try {
+        codex --profile question @args
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function oq {
+    $questionDirectory = Join-Path $HOME '.opencode\questions'
+
+    New-Item `
+        -Path $questionDirectory `
+        -ItemType Directory `
+        -Force |
+        Out-Null
+
+    Push-Location $questionDirectory
+
+    try {
+        if ($args.Count -gt 0) {
+            opencode `
+                --agent question `
+                --prompt ($args -join ' ')
+        }
+        else {
+            opencode --agent question
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 # ------------------------------------------------------------
 # PSReadLine
 # ------------------------------------------------------------

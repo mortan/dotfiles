@@ -140,12 +140,21 @@ function glo {
 }
 
 function glof {
-    glo -All -NoRelativeDate |
+    $selected = glo -All -NoRelativeDate |
         fzf `
             --ansi `
             --no-sort `
             --preview 'git --no-pager show --format= --name-status {1} --' `
             --preview-window 'right:40%'
+
+    if (-not $selected) { return }
+
+    if (@($selected).Count -eq 1) {
+        $hash = ($selected -split '\s+')[0] -replace '\x1b\[[0-9;]*m', ''
+        git show $hash | diffnav
+    } else {
+        $selected
+    }
 }
 
 # Verzeichnis auswählen + Tree-Preview

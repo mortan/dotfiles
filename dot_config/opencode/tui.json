@@ -1,4 +1,5 @@
 {
   "$schema": "https://opencode.ai/tui.json",
-  "theme": "catppuccin-mocha-mauve"
+  "theme": "catppuccin-mocha-mauve",
+  "mouse": false
 }
